@@ -117,3 +117,10 @@ process rejoin_tiles {
 }
 ```
 ## Cell Detection with Nextflow (AWS Batch)
+
+## TODO
+- [ ] Fix cell_detection workflow `rejoin_tiles` process to use actual names of files so that the output file is rejoined correctly
+- [ ] Add awscli to the `blackfynn/vips` image
+- [ ] Setup AWS Batch execution for nextflow workflow
+  - [ ] Environmentalize nextflow config for local vs batch
+- [ ] Copy pathology slide into repo

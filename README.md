@@ -23,7 +23,7 @@ Once you have Docker installed you'll need two Docker images, one to run [VIPS](
 ```
 $ docker pull blackfynn/vips
 $ docker pull blackfynn/python3.6-scipy-pillow
-$ cd cell_detection_image && docker build -t cell-detection . && cd -
+$ cd cell_detection && docker build -t cell-detection . && cd -
 ```
 
 ### 1. Segment image to tiles

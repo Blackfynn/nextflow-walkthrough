@@ -62,7 +62,7 @@ The Nextflow computational workflow has already been written to the file `cell_d
 
 In that file, you'll notice the three steps from above broken into seperate processes. To perform the tiling segmentation we use the following process definition to define our inputs and outputs and run the `vips dsave` command (as above)
 
-```
+```groovy
 process split_slide {
     container = "blackfynn/vips"
 
@@ -84,7 +84,7 @@ process split_slide {
 
 We can then perform parallel computation on each of the generated tiles with our cell detection algorithm using the following process definition:
 
-```
+```groovy
 process cell_detection {
     container = "cell-detection"
 
@@ -103,7 +103,7 @@ process cell_detection {
 
 Finally, we can collect the results from the parallel computation and reconstruct the image with the VIPS Docker image and the `vips arrayjoin` command
 
-```
+```groovy
 process rejoin_tiles {
     container = "blackfynn/vips"
 

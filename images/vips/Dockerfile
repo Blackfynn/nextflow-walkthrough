@@ -12,3 +12,5 @@ RUN cd /tmp/vips-${VIPS_VERSION} \
         && make install
 
 RUN pip install awscli
+
+ENTRYPOINT [""]

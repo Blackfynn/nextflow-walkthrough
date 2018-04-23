@@ -19,7 +19,7 @@ process split_slide {
 }
 
 process cell_detection {
-    container = "cell-detection"
+    container = "blackfynn/cell-detection"
 
     input:
     file(tile) from tiles

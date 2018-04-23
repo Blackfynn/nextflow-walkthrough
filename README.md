@@ -71,7 +71,7 @@ You should now have a file `output/output.jpeg` that represents a black and whit
 ## Cell Detection with Nextflow (local)
 Now we'll take the same computational pipeline above, and use Nextflow's data-driven language to write a workflow to execute each step for us, including fanning out to run the cell-detection algorithm on individual tiles in parallel.
 
-First, we'll need to enable Docker execution for Nextflow. To do this, notice the following line has been added to the top of the `nextflow.config` file.
+First, we'll need to enable Docker execution for Nextflow. To do this, notice the following line has been added to the `standard` profile in the `nextflow.config` file.
 
 ```
 docker.enabled = true
@@ -152,6 +152,20 @@ nextflow run cell_detection.nf --slide=pathology-slide.svs
 
 ## Cell Detection with Nextflow (AWS Batch)
 
-## TODO
-- [ ] Setup AWS Batch execution for nextflow workflow
-- [ ] Environmentalize nextflow config for local vs batch
+For larger images that you have stored in S3, you may want to execute your workflow in AWS Batch to benefit from its scalability and parallelism. To do so requires only a few changes to our Nextflow configuration file.
+We've added a new profile, named `batch`, to our `nextflow.config`, that specifies the `executor = 'awsbatch'` and well as the [AWS Batch `queue`](https://docs.aws.amazon.com/batch/latest/userguide/job_queues.html) we wish to send our execution to.
+
+To execute the workflow in AWS Batch we'll need to have our images available to the Batch environment, so we've pushed our `cell-detection` image from before to Docker Hub (as `blackfynn/simple-cell-detection`) for Batch to pull, as well as updated our `cell_detection` process in `cell_detection.nf` to point to this new image.
+
+Further, you'll need a location in AWS S3 for nextflow to use as its working directory.
+
+Finally, to run the workflow in AWS Batch we can simply call the `run` command from before using our new profile and your S3 working directory as follows:
+
+```shell
+$ export AWS_BATCH_QUEUE='<YOUR_AWS_BATCH_QUEUE>'
+$ nextflow run cell_detection.nf -profile batch -w s3://some-bucket/some/working/directory --slide=s3://some-bucket/your/image/location
+```
+
+### Notes
+* The Docker images you use to run your processes in Nextflow require `bash` and the `awscli` installed on them to be able to run in AWS Batch.
+* The `ENTRYPOINT` in your Docker images should be empty since Nextflow will override the `CMD` to run with its own script that needs to be executed by `bash`.

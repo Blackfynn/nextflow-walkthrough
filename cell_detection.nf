@@ -4,7 +4,7 @@ process split_slide {
     container = "blackfynn/vips"
 
     input:
-    file(image) from file("./pathology-slide.svs")
+    file(image) from file(params.slide)
 
     output:
     file "*.jpeg" into tiles mode flatten

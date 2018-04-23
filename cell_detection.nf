@@ -37,7 +37,7 @@ process rejoin_tiles {
     container = "blackfynn/vips"
 
     input:
-    file "*.jpeg" from binary_files.collect()
+    file "*" from binary_files.collect()
 
     script:
     """

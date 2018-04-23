@@ -21,9 +21,9 @@ In order to get started you'll need to have the following installed:
 Once you have Docker installed you'll need two Docker images, one to run [VIPS](http://jcupitt.github.io/libvips/API/current/) and the other, a Python image with [SciPy](https://www.scipy.org/) and [Pillow](http://python-pillow.org/) and build a Docker image for performing cell detection using the provided script:
 
 ```
-$ docker pull blackfynn/vips
-$ docker pull blackfynn/python3.6-scipy-pillow
-$ cd cell_detection && docker build -t cell-detection . && cd -
+docker pull blackfynn/vips
+docker pull blackfynn/python3.6-scipy-pillow
+cd cell_detection && docker build -t cell-detection . && cd -
 ```
 
 ### 1. Segment image to tiles
@@ -162,8 +162,8 @@ Further, you'll need a location in AWS S3 for nextflow to use as its working dir
 Finally, to run the workflow in AWS Batch we can simply call the `run` command from before using our new profile and your S3 working directory as follows:
 
 ```shell
-$ export AWS_BATCH_QUEUE='<YOUR_AWS_BATCH_QUEUE>'
-$ nextflow run cell_detection.nf -profile batch -w s3://some-bucket/some/working/directory --slide=s3://some-bucket/your/image/location
+export AWS_BATCH_QUEUE='<YOUR_AWS_BATCH_QUEUE>'
+nextflow run cell_detection.nf -profile batch -w s3://some-bucket/some/working/directory --slide=s3://some-bucket/your/image/location
 ```
 
 ### Notes

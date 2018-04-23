@@ -23,27 +23,46 @@ Once you have Docker installed you'll need two Docker images, one to run [VIPS](
 ```
 $ docker pull blackfynn/vips
 $ docker pull blackfynn/python3.6-scipy-pillow
-$ cd cell_detection_image && docker build -t cell-detection . && cd -
+$ cd cell_detection && docker build -t cell-detection . && cd -
 ```
+
+### 1. Segment image to tiles
 
 First we'll need to segment the original image into tiles. To do so we'll mount the original pathology image into our VIPS Docker image and use the `vips dsave` command as follows:
 
-```
-$ docker run -it -v $PWD/pathology-slide.svs:/input/pathology-slide.svs -v $PWD/output:/output blackfynn/vips vips dzsave /input/pathology-slide.svs /output/slide
+```shell
+docker run \
+    -v $PWD/pathology-slide.svs:/input/pathology-slide.svs \
+    -v $PWD/output:/output \
+    blackfynn/vips \
+    vips dzsave /input/pathology-slide.svs /output/slide
 ```
 
 This will save the output of the `vips dsave` command to a local `output/slide_files/` directory.
 
+### 2. Cell detection
+
 Next we'll use the largest segementation of tiles as input to our simple cell detection algorithm:
 
+```shell
+DIR=$(ls $PWD/output/slide_files/ | sort -n | tail -1)
+docker run \
+    -v $PWD/output/slide_files/$DIR/:/input \
+    -v $PWD/output/binary_data/:/output \
+    cell-detection \
+    python /app/cell_detection.py /input /output
 ```
-ls $PWD/output/slide_files/ | sort -n | tail -1 | xargs -I {} docker run -v $PWD/output/slide_files/{}/:/input -v $PWD/output/binary_data/:/output cell-detection python /app/cell_detection.py /input /output
-```
+
+### 3. Reconstruct image
 
 Finally we'll reconstruct the image from the binary output of our cell detection algorithm using our VIPS image and the command `vips arrayjoin`:
 
-```
-docker run -v $PWD/output/binary_data/:/input/ -v $PWD/output/:/output/ blackfynn/vips bash -c 'vips arrayjoin "$(echo /input/*.jpeg)" /output/output.jpeg --across 9'
+```shell
+docker run \
+    -v $PWD/output/binary_data/:/input/ \
+    -v $PWD/output/:/output/ \
+    blackfynn/vips \
+    bash -c 'vips arrayjoin "$(echo /input/*.jpeg)" /output/output.jpeg --across 9'
 ```
 
 You should now have a file `output/output.jpeg` that represents a black and white rendering of the original image with the detected cells marked in black!
@@ -62,12 +81,14 @@ The Nextflow computational workflow has already been written to the file `cell_d
 
 In that file, you'll notice the three steps from above broken into seperate processes. To perform the tiling segmentation we use the following process definition to define our inputs and outputs and run the `vips dsave` command (as above)
 
+### 1. Segment image to tiles
+
 ```groovy
 process split_slide {
     container = "blackfynn/vips"
 
     input:
-    file(image) from file("./pathology-slide.svs")
+    file(image) from file(params.slide)
 
     output:
     file "*.jpeg" into tiles mode flatten
@@ -81,6 +102,8 @@ process split_slide {
     """
 }
 ```
+
+### 2. Cell detection
 
 We can then perform parallel computation on each of the generated tiles with our cell detection algorithm using the following process definition:
 
@@ -101,6 +124,8 @@ process cell_detection {
 }
 ```
 
+### 3. Reconstruct image
+
 Finally, we can collect the results from the parallel computation and reconstruct the image with the VIPS Docker image and the `vips arrayjoin` command
 
 ```groovy
@@ -116,6 +141,15 @@ process rejoin_tiles {
     """
 }
 ```
+
+### Running Nextlfow
+
+To run the `cell_detection.nf` workflow we can use the following command, which provides our local `pathology_slide.svs` image to our workflow using the `slide` parameter that we used in the Step 1.
+
+```shell
+nextflow run cell_detection.nf --slide=pathology-slide.svs
+```
+
 ## Cell Detection with Nextflow (AWS Batch)
 
 ## TODO

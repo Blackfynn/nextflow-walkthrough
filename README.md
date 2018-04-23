@@ -50,6 +50,70 @@ You should now have a file `output/output.jpeg` that represents a black and whit
 
 
 ## Cell Detection with Nextflow (local)
+Now we'll take the same computational pipeline above, and use Nextflow's data-driven language to write a workflow to execute each step for us, including fanning out to run the cell-detection algorithm on individual tiles in parallel.
 
+First, we'll need to enable Docker execution for Nextflow. To do this, notice the following line has been added to the top of the `nextflow.config` file.
 
+```
+docker.enabled = true
+```
+
+The Nextflow computational workflow has already been written to the file `cell_detection.nf`.
+
+In that file, you'll notice the three steps from above broken into seperate processes. To perform the tiling segmentation we use the following process definition to define our inputs and outputs and run the `vips dsave` command (as above)
+
+```
+process split_slide {
+    container = "blackfynn/vips"
+
+    input:
+    file(image) from file("./pathology-slide.svs")
+
+    output:
+    file "*.jpeg" into tiles mode flatten
+
+    script:
+    """
+    vips dzsave $image slide
+
+    DIR=\$(ls slide_files/ | sort -n | tail -1)
+    mv slide_files/\$DIR/* .
+    """
+}
+```
+
+We can then perform parallel computation on each of the generated tiles with our cell detection algorithm using the following process definition:
+
+```
+process cell_detection {
+    container = "cell-detection"
+
+    input:
+    file(tile) from tiles
+
+    output:
+    file "*_binary.jpeg" into binary_files
+
+    script:
+    """
+    python /app/cell_detection.py $tile .
+    """
+}
+```
+
+Finally, we can collect the results from the parallel computation and reconstruct the image with the VIPS Docker image and the `vips arrayjoin` command
+
+```
+process rejoin_tiles {
+    container = "blackfynn/vips"
+
+    input:
+    file "*.jpeg" from binary_files.collect()
+
+    script:
+    """
+    vips arrayjoin "`echo *.jpeg`" output.jpeg --across 9
+    """
+}
+```
 ## Cell Detection with Nextflow (AWS Batch)

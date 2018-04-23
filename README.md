@@ -88,7 +88,7 @@ process split_slide {
     container = "blackfynn/vips"
 
     input:
-    file(image) from file("./pathology-slide.svs")
+    file(image) from file(params.slide)
 
     output:
     file "*.jpeg" into tiles mode flatten
@@ -141,6 +141,15 @@ process rejoin_tiles {
     """
 }
 ```
+
+### Running Nextlfow
+
+To run the `cell_detection.nf` workflow we can use the following command, which provides our local `pathology_slide.svs` image to our workflow using the `slide` parameter that we used in the Step 1.
+
+```shell
+nextflow run cell_detection.nf --slide=pathology-slide.svs
+```
+
 ## Cell Detection with Nextflow (AWS Batch)
 
 ## TODO

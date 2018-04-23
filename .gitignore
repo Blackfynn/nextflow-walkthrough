@@ -1,6 +1,8 @@
+.nextflow*
 .gradle
 /build/
 output/
+work/
 
 # Ignore Gradle GUI config
 gradle-app.setting

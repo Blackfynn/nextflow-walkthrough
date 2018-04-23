@@ -1,7 +1,7 @@
 # Simple Cell Detection with Docker, Nextflow, and AWS Batch
 
 ## About
-This repository contains code for a walkthrough of a simple computational pipeline for cell-detection using [Nextflow](https://www.nextflow.io/), [Docker](https://www.docker.com/), and [AWS Batch](https://aws.amazon.com/batch/)
+This repository contains code for a walkthrough of a simple computational pipeline for cell detection using [Nextflow](https://www.nextflow.io/), [Docker](https://www.docker.com/), and [AWS Batch](https://aws.amazon.com/batch/)
 
 ## Getting Started
 
@@ -23,7 +23,7 @@ Once you have Docker installed you'll need two Docker images, one to run [VIPS](
 ```
 $ docker pull blackfynn/vips
 $ docker pull blackfynn/python3.6-scipy-pillow
-$ cd cell-detection-image && docker build -t cell-detection . && cd -
+$ cd cell_detection_image && docker build -t cell-detection . && cd -
 ```
 
 First we'll need to segment the original image into tiles. To do so we'll mount the original pathology image into our VIPS Docker image and use the `vips dsave` command as follows:
@@ -34,7 +34,7 @@ $ docker run -it -v $PWD/pathology-slide.svs:/input/pathology-slide.svs -v $PWD/
 
 This will save the output of the `vips dsave` command to a local `output/slide_files/` directory.
 
-Next we'll use the largest segementation of tiles as input to our simple cell-detection algorithm:
+Next we'll use the largest segementation of tiles as input to our simple cell detection algorithm:
 
 ```
 ls $PWD/output/slide_files/ | sort -n | tail -1 | xargs -I {} docker run -v $PWD/output/slide_files/{}/:/input -v $PWD/output/binary_data/:/output cell-detection python /app/cell_detection.py /input /output
